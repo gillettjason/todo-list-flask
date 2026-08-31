@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Noteable Home{% endblock %}
+
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="{{ url_for('tasks_bp.home') }}">Notable</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" href="{{ url_for('tasks_bp.home') }}">Home</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+<div id="container-content" class="container-fluid page-container d-flex justify-content-center align-items-center">
+    <div id="task-content">
+        <h1>Task List:</h1>
+        <form>
+            <div id="task-input-group" class="input-group">
+                <input
+                    id="task-input"
+                    type="text"
+                    name="title"
+                    class="form-control"
+                    placeholder="Enter task"
+                >
+                <input id="getTaskTitleInput" class="btn btn-primary" type="submit" name="submit">
+            </input>
+            </div>
+        </form>
+        <div id="task-error" class="text-danger"></div>
+        <ul id="task-list" class="list-unstyled">
+            {% for task in tasks %}
+                addTaskToList(
+                    {{ task.id }},
+                    {{ task.title | tojson }},
+                    {{ task.completed | tojson }}
+                );
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
