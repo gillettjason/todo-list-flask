@@ -34,13 +34,6 @@
         </form>
         <div id="task-error" class="text-danger"></div>
         <ul id="task-list" class="list-unstyled">
-            {% for task in tasks %}
-                addTaskToList(
-                    {{ task.id }},
-                    {{ task.title | tojson }},
-                    {{ task.completed | tojson }}
-                );
-            {% endfor %}
         </ul>
     </div>
 </div>
