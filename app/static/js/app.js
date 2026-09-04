@@ -1,74 +1,57 @@
-// ----------------------- Functions
-async function getTasks() {
-    try {
-        const response = await fetch("/get-tasks");
-        if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
+// -----------------------
+// DOM Elements
+// -----------------------
+
+const taskList = document.getElementById("task-list");
+const taskInput = document.getElementById("task-input");
+const addTaskBtn = document.getElementById("getTaskTitleInput");
+const taskError = document.getElementById("task-error");
+
+// -----------------------
+// API Functions
+// -----------------------
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            ...options.headers
         }
+    });
+
         const data = await response.json();
 
-        data.forEach((task) => {
+    if (!response.ok) {
+        const error = new Error(data.message || `Response status: ${response.status}`);
+        error.status = response.status;
+        throw error;
+    }
 
-            const id = task["id"];
-            const title = task["title"];
-            const completed = task["completed"];
+    return data;
+}
 
-            addTaskToList(id, title, completed);
+async function getTasks() {
+    try {
+        const tasks = await apiRequest("/get-tasks");
+
+        tasks.forEach((task) => {
+
+            addTaskToList(task);
         });
     } catch (error) {
         console.error("Error fetching tasks:", error);
     }
 }
 
-function addTaskToList(id, taskTitle, completed) {
-    // vars
-    const taskList = document.getElementById("task-list");
-
-    const taskItem = document.createElement("li");
-    const taskCheckbox = document.createElement("input");
-    const title = document.createElement("span");
-    const deleteItem = document.createElement("input");
-
-    // set attributes and classes
-    taskItem.id = id;
-    taskItem.classList.add("task-item");
-
-    title.classList.add("task-title");
-    title.textContent = taskTitle;
-
-    taskCheckbox.type = "checkbox";
-
-    if (completed) {
-        taskCheckbox.checked = true;
-        title.classList.add("completed-task");
-    }
-
-    // set attributes and classes for delete button
-    deleteItem.type = "button";
-    deleteItem.value = "Delete";
-    deleteItem.classList.add("btn", "btn-danger");
-
-    // add event listeners
-    taskCheckbox.addEventListener("change", completeTask);
-    title.addEventListener("click", updateTaskTitle);
-    deleteItem.addEventListener("click", deleteTask);
-
-    // append elements
-    taskItem.appendChild(taskCheckbox);
-    taskItem.appendChild(title);
-    taskItem.appendChild(deleteItem);
-
-    taskList.appendChild(taskItem);
-}
-
 async function completeTask(event) {
     event.stopPropagation();
 
-    const taskId = event.target.parentElement.id;
-    const title = event.target.parentElement.querySelector(".task-title");
-    const completedTask = event.target.checked;
-    console.log("Completed =" + completedTask);
-    if (event.target.checked) {
+    const taskItem = event.currentTarget.parentElement;
+    const taskId = taskItem.id;
+    const title = taskItem.querySelector(".task-title");
+    const completedTask = event.currentTarget.checked;
+
+    if (completedTask) {
         title.classList.add("completed-task");
     } else {
         title.classList.remove("completed-task");
@@ -100,70 +83,41 @@ async function deleteTask(event) {
     event.stopPropagation();
 
     const taskId = event.target.parentElement.id;
-    try {
-        const response = await fetch("/delete-task", {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                id: taskId
-            })
-        });
 
-        if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        const removedTaskId = result["id"];
-        document.getElementById(removedTaskId).remove();
-    } catch (error) {
-        console.error(error.message);
-    }
-}
-
-
-function duplicateTaskOutput(taskTitle) {
-    const taskError = document.getElementById("task-error");
-    taskError.textContent = `Task "${taskTitle}" already exists.`;
-}
-
-async function createNewTask(taskTitle) {
-  const url = "/add-task";
-  try {
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+    await apiRequest("/delete-task", {
+        method: "DELETE",
         body: JSON.stringify({
-            title: taskTitle
+            id: taskId
         })
     });
 
-    const result = await response.json();
-    const id = result["id"];
-    const title = result["title"];
-    const completed = result["completed"];
-
-    if (response.status === 409){
-        duplicateTaskOutput(taskTitle);
-    }
-    
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
-
-    addTaskToList(id, title, completed);
-
-    console.log(result);
-  } catch (error) {
-    console.error(error.message);
-  }
+    document.getElementById(taskId).remove();
 }
 
-async function updateTaskTitle(event) {
+async function newTask(taskTitle) {
+    try {
+        const result = await apiRequest("/add-task", {
+            method: "POST",
+            body: JSON.stringify({
+                title: taskTitle
+            })
+        });
+
+        addTaskToList(result);
+        return true;
+
+    } catch (error) {
+        if (error.status === 409) {
+            duplicateTaskOutput(taskTitle);
+            return false;
+        }
+
+        console.error(error.message);
+        return false;
+    }
+}
+
+async function updateTitle(event) {
     event.stopPropagation();
 
     const taskItem = event.currentTarget.parentElement;
@@ -216,18 +170,7 @@ async function updateTaskTitle(event) {
 
             const result = await response.json();
 
-            console.log(result);
-
-            const newTitleElement = document.createElement("span");
-
-            newTitleElement.classList.add("task-title");
-            newTitleElement.textContent = result.title;
-
-            newTitleElement.addEventListener(
-                "click",
-                updateTaskTitle
-            );
-
+            const newTitleElement = createTaskTitle(result.title, result.completed);
             input.replaceWith(newTitleElement);
             saveButton.remove();
 
@@ -253,27 +196,92 @@ async function updateTaskTitle(event) {
     });
 }
 
+// -----------------------
+// Handlers
+// -----------------------
+async function handleAddTask(event) {
+    event.preventDefault();
+
+    const taskTitle = taskInput.value.trim();
+
+    if (!taskTitle) {
+        return;
+    }
+
+    const success = await newTask(taskTitle);
+
+    if (success) {
+        taskInput.value = "";
+        clearError();
+    }
+}
+
+// -----------------------
+// UI Functions
+// -----------------------
+function createTaskTitle(titleText, completed) {
+    const title = document.createElement("span");
+
+    title.classList.add("task-title");
+    title.textContent = titleText;
+
+    if (completed) {
+        title.classList.add("completed-task");
+    }
+
+    title.addEventListener("click", updateTitle);
+
+    return title;
+}
+
+function addTaskToList(task) {
+    // vars
+    const {id, taskTitle, completed} = task;
+
+    const taskItem = document.createElement("li");
+    const taskCheckbox = document.createElement("input");
+    const title = createTaskTitle(task.title, task.completed);
+    const deleteItem = document.createElement("input");
+
+    // set attributes and classes
+    taskItem.id = id;
+    taskItem.classList.add("task-item");
+
+    taskCheckbox.type = "checkbox";
+    taskCheckbox.classList.add("task-checkbox");
+
+    if (completed) {
+        taskCheckbox.checked = true;
+        title.classList.add("completed-task");
+    }
+
+    // set attributes and classes for delete button
+    deleteItem.type = "button";
+    deleteItem.value = "Delete";
+    deleteItem.classList.add("btn", "btn-danger");
+
+    // add event listeners
+    taskCheckbox.addEventListener("change", completeTask);
+    deleteItem.addEventListener("click", deleteTask);
+
+    // append elements
+    taskItem.appendChild(taskCheckbox);
+    taskItem.appendChild(title);
+    taskItem.appendChild(deleteItem);
+
+    taskList.appendChild(taskItem);
+}
+
+function duplicateTaskOutput(taskTitle) {
+    taskError.textContent = `Task "${taskTitle}" already exists.`;
+}
+
 function clearError() {
-    const taskError = document.getElementById("task-error");
     taskError.textContent = "";
 }
 // ----------------------- Main Execution
 // Get all tasks on load
-document.addEventListener("DOMContentLoaded", function () {
-    getTasks();
-});
+getTasks();
 
 // Add event listener to task input
-const addTaskBtn = document.getElementById("getTaskTitleInput");
-
-addTaskBtn.addEventListener("click", function(event) {
-    event.preventDefault();
-    const taskInput = document.getElementById("task-input");
-    const taskTitle = taskInput.value.trim();
-    console.log("Task Title:", taskTitle);
-    createNewTask(taskTitle)
-
-    // Clear the input field and error message after submission
-    taskInput.value = "";
-    clearError();
-});
+addTaskBtn.addEventListener("click", handleAddTask);

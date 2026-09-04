@@ -1,42 +1,209 @@
 :root {
     --black-color: #212529;
+    --success-green: #4caf50;
 }
+
+/* -----------------------
+   Navigation
+----------------------- */
 
 nav {
     padding-left: 20px;
 }
 
-#task-content {
-    margin-top: 30px;
-}
-
-#task-error {
-    margin-top: 10px;
-}
-
-#task-list {
-    margin-top: 50px;
-    display: flex;
-    flex-direction: column;
-}
-
-.task-item {
-    padding: 10px;
-    border-bottom: 1px solid #cccdce;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.completed-task {
-    text-decoration: line-through;
-    color: #6c757d;
-}
-
 .navbar-dark .navbar-nav .nav-link {
-    color: white;   
+    color: white;
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
     color: #b0b0b0;
+}
+
+
+/* -----------------------
+   Page
+----------------------- */
+
+body {
+    background-color: #f5f6f8;
+}
+
+#container-content {
+    min-height: calc(100vh - 56px);
+}
+
+#task-content {
+    width: 100%;
+    max-width: 700px;
+    margin: 50px auto;
+}
+
+
+/* -----------------------
+   Header
+----------------------- */
+
+.task-header {
+    margin-bottom: 25px;
+}
+
+.task-header h1 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.task-header p {
+    margin-bottom: 0;
+}
+
+
+/* -----------------------
+   Task Card
+----------------------- */
+
+.task-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+
+/* -----------------------
+   Task Input
+----------------------- */
+
+#task-input {
+    height: 45px;
+}
+
+#task-input:focus {
+    box-shadow: none;
+}
+
+#task-input-group .btn {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+
+/* -----------------------
+   Errors
+----------------------- */
+
+#task-error {
+    min-height: 24px;
+    margin-top: 10px;
+}
+
+
+/* -----------------------
+   Task List
+----------------------- */
+
+#task-list {
+    margin-top: 25px;
+    margin-bottom: 0;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    padding: 14px 12px;
+    margin-bottom: 8px;
+
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+
+    transition: box-shadow 0.2s ease;
+}
+
+.task-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+
+/* -----------------------
+   Cartoon Checkbox
+----------------------- */
+
+.task-checkbox {
+    appearance: none;
+
+    width: 28px;
+    height: 28px;
+
+    border: 3px solid #212529;
+    border-radius: 6px;
+
+    background-color: white;
+
+    box-shadow: 3px 3px 0 #212529;
+
+    cursor: pointer;
+    flex-shrink: 0;
+
+    position: relative;
+
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.1s ease,
+        background-color 0.15s ease;
+}
+
+.task-checkbox:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #212529;
+}
+
+.task-checkbox:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 #212529;
+}
+
+.task-checkbox:checked {
+    background-color: #4caf50;
+    border-color: #212529;
+}
+
+.task-checkbox:checked::after {
+    content: "✓";
+
+    position: absolute;
+
+    left: 4px;
+    top: -5px;
+
+    font-size: 25px;
+    font-weight: 900;
+
+    color: white;
+}
+
+
+/* -----------------------
+   Task Title
+----------------------- */
+
+.task-title {
+    flex: 1;
+    cursor: pointer;
+}
+
+.completed-task {
+    color: #6c757d;
+    opacity: 0.65;
+}
+
+
+/* -----------------------
+   Delete Button
+----------------------- */
+
+.task-item .btn-danger {
+    font-size: 0.8rem;
+    padding: 4px 9px;
 }
